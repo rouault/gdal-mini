@@ -1616,16 +1616,16 @@ OGRFORMATS_ENABLED=
 OGRFORMATS_ENABLED_CFLAGS=
 OGRFORMATS_DISABLED=
 
-AC_DEFUN([INTERNAL_FORMATS],[aaigrid adrg aigrid airsar arg blx bmp bsb cals ceos ceos2 coasp cosar ctg dimap dted e00grid elas envisat ers esric fit gff gsg gxf hf2 idrisi ignfheightasciigrid ilwis ingr iris iso8211 jaxapalsar jdem kmlsuperoverlay l1b leveller map mrf msgn ngsgeoid nitf northwood pds prf r raw rmf rs2 safe saga sdts sentinel2 sgi sigdem srtmhgt stacta terragen tga til tsx usgsdem xpm xyz zmap])
-AC_DEFUN([INTERNAL_OPT_FORMATS],[grib ozi pdf rik])
-AC_DEFUN([INTERNAL_DRIVERS],[aeronavfaa arcgen avc bna cad csv dgn dxf edigeo flatgeobuf geoconcept georss gml gmt gpsbabel gpx gtm htf jml mapml mvt ntf openair openfilegdb pgdump rec s57 segukooa segy selafin shape sua svg sxf tiger vdv wasp xplane])dnl
-AC_DEFUN([CURL_FORMATS],[eeda plmosaic rda wcs wms wmts daas ogcapi])dnl
-AC_DEFUN([CURL_DRIVERS],[amigocloud carto cloudant couchdb csw elastic ngw plscenes wfs])dnl
-AC_DEFUN([SQLITE_FORMATS],[rasterlite mbtiles])dnl
+AC_DEFUN([INTERNAL_FORMATS],[aaigrid bmp bsb ceos ceos2 coasp cosar dimap dted ers iso8211 jaxapalsar kmlsuperoverlay map mrf nitf pds raw rs2 safe saga sentinel2 srtmhgt stacta til tsx usgsdem xyz zmap])
+AC_DEFUN([INTERNAL_OPT_FORMATS],[grib ozi pdf])
+AC_DEFUN([INTERNAL_DRIVERS],[cad csv dgn dxf edigeo flatgeobuf georss gml gmt gpsbabel gpx gtm jml mapml mvt openfilegdb pgdump s57 shape svg sxf])dnl
+AC_DEFUN([CURL_FORMATS],[wcs wms wmts ogcapi])dnl
+AC_DEFUN([CURL_DRIVERS],[csw elastic wfs])dnl
+AC_DEFUN([SQLITE_FORMATS],[mbtiles])dnl
 AC_DEFUN([SQLITE_DRIVERS],[gpkg vfk osm])dnl
 AC_DEFUN([EXPAT_DRIVERS],[ods xlsx lvbag])dnl
 AC_DEFUN([XERCES_DRIVERS],[nas ili gmlas])dnl
-AC_DEFUN([ODBC_DRIVERS],[odbc pgeo mssqlspatial geomedia walk])dnl
+AC_DEFUN([ODBC_DRIVERS],[odbc pgeo mssqlspatial])dnl
 
 AC_ARG_ENABLE(all-optional-drivers, AS_HELP_STRING([--disable-all-optional-drivers], [disable all non-mandatory internal drivers. Individual drivers can be added with --enable-driver-XXX]))
 if test "x$enable_all_optional_drivers" = "xno"; then :
@@ -1695,7 +1695,7 @@ else
 fi
 ])
 
-AC_DEFUN([INTERNAL_DRIVERS_WITH_SAME_NAME_AS_FORMAT],[idrisi pds sdts])dnl
+AC_DEFUN([INTERNAL_DRIVERS_WITH_SAME_NAME_AS_FORMAT],[])dnl
 m4_foreach_w([frmt],INTERNAL_DRIVERS_WITH_SAME_NAME_AS_FORMAT,
 [
 driver_enabled=m4_join([_],[$INTERNAL_FORMAT],frmt,[ENABLED])
@@ -2017,56 +2017,6 @@ if test "$FITS_SETTING" != "no" ; then
 fi
 
 dnl ---------------------------------------------------------------------------
-dnl Check if PCRaster (libcsf) library is available.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(pcraster,[  --with-pcraster[=ARG]   Include PCRaster (libcsf) support (ARG=internal, no or path)],,)
-
-if test "$with_pcraster" = "no" ; then
-
-  PCRASTER_SETTING=no
-
-  echo "PCRaster support disabled."
-
-elif test "$with_pcraster" = "yes" -o "$with_pcraster" = "" ; then
-
-  AC_CHECK_LIB(csf,Mopen,PCRASTER_SETTING=external,PCRASTER_SETTING=internal,$LIBS)
-  AC_CHECK_HEADERS(csf.h)
-
-  if test "$PCRASTER_SETTING" = "external" -a "$ac_cv_header_csf_h" = "no" ; then
-    PCRASTER_SETTING=internal
-  fi
-
-  if test "$PCRASTER_SETTING" = "external" ; then
-    LIBS="-lcsf $LIBS"
-    echo "using pre-installed libcsf."
-  else
-    echo "using internal csf code."
-  fi
-
-elif test "$with_pcraster" = "internal" ; then
-
-  PCRASTER_SETTING=internal
-
-  echo "using internal csf code."
-
-else
-
-  PCRASTER_SETTING=external
-  LIBS="-L$with_pcraster/lib -lcsf $LIBS"
-  EXTRA_INCLUDES="-I$with_pcraster/include $EXTRA_INCLUDES"
-
-  echo "using libcsf from $with_pcraster."
-
-fi
-
-AC_SUBST(PCRASTER_SETTING,$PCRASTER_SETTING)
-
-if test "$PCRASTER_SETTING" != "no" ; then
-  OPT_GDAL_FORMATS="pcraster $OPT_GDAL_FORMATS"
-fi
-
-dnl ---------------------------------------------------------------------------
 dnl Select a PNG Library to use, or disable driver.
 dnl ---------------------------------------------------------------------------
 
@@ -2118,75 +2068,6 @@ if test "$PNG_SETTING" != "no" ; then
   if test "x$INTERNAL_FORMAT_grib_ENABLED" = "xyes"; then
   	GDALFORMATS_ENABLED="$GDALFORMATS_ENABLED grib"
   fi
-fi
-
-dnl ---------------------------------------------------------------------------
-dnl Enable DDS driver.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH([dds], [  --with-dds[=ARG]        Include DDS support (ARG=no, or path)],,)
-
-AC_MSG_CHECKING([for libcrunch])
-
-if test "$with_dds" = "no" -o "$with_dds" = ""; then
-
-  DDS_SETTING="no"
-  CRUNCHDIR=""
-
-  echo "dds support disabled."
-
-else
-
-  DDS_SETTING=yes
-  CRUNCHDIR="$with_dds"
-  LIBS="-L$with_dds/lib/ -lcrunch $LIBS"
-  echo "using libcrunch from $with_dds."
-
-fi
-
-AC_SUBST(CRUNCHDIR,$CRUNCHDIR)
-AC_SUBST([DDS_SETTING], [$DDS_SETTING])
-
-if test "$DDS_SETTING" != "no" ; then
-  OPT_GDAL_FORMATS="dds $OPT_GDAL_FORMATS"
-fi
-
-dnl ---------------------------------------------------------------------------
-dnl Check if GTA library is available.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH([gta],[  --with-gta[=ARG]        Include GTA support (ARG=no or libgta tree prefix)],,)
-
-if test "$with_gta" = "no" ; then
-
-  GTA_SETTING=no
-
-  echo "GTA support disabled."
-
-elif test "$with_gta" = "yes" -o "$with_gta" = "" ; then
-
-  AC_CHECK_LIB([gta], [gta_version], [GTA_SETTING=yes], [GTA_SETTING=no],)
-
-  if test "$GTA_SETTING" = "yes" ; then
-    LIBS="-lgta $LIBS"
-    echo "using pre-installed libgta."
-  else
-    echo "libgta not found - GTA support disabled"
-  fi
-
-else
-
-  GTA_SETTING=yes
-  LIBS="-L$with_gta -L$with_gta/lib -lgta $LIBS"
-  EXTRA_INCLUDES="-I$with_gta -I$with_gta/include $EXTRA_INCLUDES"
-
-  echo "using libgta from $with_gta."
-fi
-
-AC_SUBST([GTA_SETTING], [$GTA_SETTING])
-
-if test "$GTA_SETTING" != "no" ; then
-  OPT_GDAL_FORMATS="gta $OPT_GDAL_FORMATS"
 fi
 
 dnl ---------------------------------------------------------------------------
@@ -2378,64 +2259,6 @@ if test "$JPEG_SETTING" != "no" ; then
   OPT_GDAL_FORMATS="jpeg $OPT_GDAL_FORMATS"
 fi
 
-
-dnl ---------------------------------------------------------------------------
-dnl Check for CharLS
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(charls,
-            AS_HELP_STRING([--with-charls],[Include JPEG-Lossless support]),,)
-
-HAVE_CHARLS=no
-CHARLS_INC=
-
-if test "$with_charls" = "yes" -o "$with_charls" = "" ; then
-  dnl CharLS 2.1
-  AC_CHECK_HEADERS([charls/version.h])
-  if test "$ac_cv_header_charls_version_h" = "yes"; then
-    AC_LANG_PUSH([C++])
-    AC_CHECK_LIB(charls,JpegLsDecode,HAVE_CHARLS=yes)
-    AC_LANG_POP([C++])
-    if test "$HAVE_CHARLS" = "yes"; then
-        LIBS="-lcharls $LIBS"
-        CHARLS_INC="-DCHARLS_2_1"
-    else
-        AC_LANG_PUSH([C++])
-        AC_CHECK_LIB(CharLS,JpegLsDecode,HAVE_CHARLS=yes)
-        AC_LANG_POP([C++])
-        if test "$HAVE_CHARLS" = "yes"; then
-            LIBS="-lCharLS $LIBS"
-            CHARLS_INC="-DCHARLS_2_1"
-        fi
-    fi
-  else
-    dnl CharLS 1.x
-    AC_CHECK_HEADERS([CharLS/interface.h])
-    if test "$ac_cv_header_CharLS_interface_h" = "yes"; then
-      AC_CHECK_LIB(CharLS,JpegLsDecode,HAVE_CHARLS=yes)
-      if test "$HAVE_CHARLS" = "yes"; then
-          LIBS="-lCharLS $LIBS"
-          CHARLS_INC="-DCHARLS_INTERFACE_H"
-      fi
-    else
-      dnl CharLS 2.0
-      AC_CHECK_HEADERS([CharLS/charls.h])
-      if test "$ac_cv_header_CharLS_charls_h" = "yes"; then
-        AC_LANG_PUSH([C++])
-        AC_CHECK_LIB(CharLS,JpegLsDecode,HAVE_CHARLS=yes)
-        AC_LANG_POP([C++])
-        if test "$HAVE_CHARLS" = "yes"; then
-            LIBS="-lCharLS $LIBS"
-            CHARLS_INC="-DCHARLS_2"
-        fi
-      fi
-    fi
-  fi
-fi
-
-AC_SUBST(HAVE_CHARLS,$HAVE_CHARLS)
-AC_SUBST(CHARLS_INC,$CHARLS_INC)
-
 dnl ---------------------------------------------------------------------------
 dnl Check for BSB in the local tree.
 dnl ---------------------------------------------------------------------------
@@ -2482,52 +2305,6 @@ fi
 
 AC_SUBST(JPEG12_ENABLED,$JPEG12_ENABLED)
 AC_SUBST(TIFF_JPEG12_ENABLED,$TIFF_JPEG12_ENABLED)
-
-dnl ---------------------------------------------------------------------------
-dnl Select a GIF Library to use, or disable driver.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(gif,[  --with-gif[=ARG]        Include GIF support (ARG=internal, no or path)],,)
-
-if test "$with_gif" = "no" ; then
-
-  GIF_SETTING=no
-
-  echo "gif support disabled."
-
-elif test "$with_gif" = "yes" -o "$with_gif" = "" ; then
-
-  AC_CHECK_LIB(gif,DGifOpenFileName,GIF_SETTING=external,GIF_SETTING=internal,)
-  AC_CHECK_HEADERS(gif_lib.h)
-
-  if test "$GIF_SETTING" = "external" ; then
-    LIBS="-lgif $LIBS"
-    echo "using pre-installed libgif."
-  else
-    echo "using internal gif code."
-  fi
-
-elif test "$with_gif" = "internal" ; then
-
-  GIF_SETTING=internal
-
-  echo "using internal gif code."
-
-else
-
-  GIF_SETTING=external
-  LIBS="-L$with_gif -L$with_gif/lib -lgif $LIBS"
-  EXTRA_INCLUDES="-I$with_gif -I$with_gif/include $EXTRA_INCLUDES"
-
-  echo "using libgif from $with_gif."
-
-fi
-
-AC_SUBST(GIF_SETTING,$GIF_SETTING)
-
-if test "$GIF_SETTING" != "no" ; then
-  OPT_GDAL_FORMATS="gif $OPT_GDAL_FORMATS"
-fi
 
 dnl ---------------------------------------------------------------------------
 dnl Select an OGDI Library to use, or disable driver.
@@ -2739,78 +2516,6 @@ fi
 AC_SUBST(SOSI_ENABLED, $SOSI_ENABLED)
 AC_SUBST(SOSI_LIB, $SOSI_LIB)
 AC_SUBST(SOSI_INC, $SOSI_INC)
-
-dnl ---------------------------------------------------------------------------
-dnl MongoCXX driver
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(mongocxx,[  --with-mongocxx[=ARG]        Include MongoCXX support (ARG=Path, yes or no)],,)
-
-MONGODB_ENABLED=no
-
-if test "$with_mongocxx" = "no" ; then
-
-  echo "MONGODB support disabled."
-
-elif test "$with_mongocxx" = "yes" -o "$with_mongocxx" = "" ; then
-
-    AC_MSG_CHECKING([for MongoCXX])
-
-    rm -f testmongocxx.*
-    rm -f testmongocxx
-    echo "#include <mongo/client/dbclient.h>" > testmongocxx.cpp
-    echo "using namespace mongo;" >> testmongocxx.cpp
-    echo "int main() { client::initialize(client::Options()); return 0; }" >> testmongocxx.cpp
-    if test -z "`${CXX} ${CXXFLAGS} ${CPPFLAGS} testmongocxx.cpp -lmongoclient -lboost_system -lboost_thread -lboost_regex -o testmongocxx 2>&1`" ; then
-        AC_MSG_RESULT([MongoCXX found])
-        MONGODB_ENABLED="yes"
-        MONGODB_LIB=" -lmongoclient -lboost_system -lboost_thread -lboost_regex"
-    else
-        if test "$with_mongocxx" = "yes"; then
-            AC_MSG_ERROR([MongoCXX not found.])
-        else
-            AC_MSG_RESULT([MongoCXX not found.])
-        fi
-    fi
-    rm -f testmongocxx.*
-    rm -f testmongocxx
-
-else
-
-  AC_ARG_WITH(boost-lib-path,
-          [  --with-boost-lib-path=ARG   Path to boost libraries for mongocxx client],,,)
-
-  AC_MSG_CHECKING([for libmongoclient.so in in $with_mongocxx/lib])
-  MONGODB_ENABLED=yes
-  if test -r $with_mongocxx/lib/libmongoclient.so; then
-    AC_MSG_RESULT([found.])
-    MONGODB_LIB="-L$with_mongocxx/lib -lmongoclient"
-  elif test -r $with_mongocxx/lib/libmongoclient.dylib; then
-    AC_MSG_RESULT([found.])
-    MONGODB_LIB="-L$with_mongocxx/lib -lmongoclient"
-  else
-    AC_MSG_ERROR([not found.])
-  fi
-
-  if test "$with_boost_lib_path" = "" ; then
-    MONGODB_LIB="$MONGODB_LIB -lboost_system -lboost_thread -lboost_regex"
-  else
-    MONGODB_LIB="$MONGODB_LIB -L$with_boost_lib_path -lboost_system -lboost_thread -lboost_regex"
-  fi
-
-  AC_MSG_CHECKING([for mongo/client/dbclient.h in $with_mongocxx/include])
-  if test -r $with_mongocxx/include/mongo/client/dbclient.h ; then
-    AC_MSG_RESULT([found.])
-    MONGODB_INC="-I$with_mongocxx/include"
-  else
-    AC_MSG_ERROR([not found.])
-  fi
-
-fi
-
-AC_SUBST(MONGODB_ENABLED, $MONGODB_ENABLED)
-AC_SUBST(MONGODB_LIB, $MONGODB_LIB)
-AC_SUBST(MONGODB_INC, $MONGODB_INC)
 
 
 dnl ---------------------------------------------------------------------------
@@ -3276,56 +2981,6 @@ if test "$NETCDF_SETTING" != "no" ; then
 
 fi
 
-
-dnl ---------------------------------------------------------------------------
-dnl Select a JasPer Library to use, or disable driver.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(jasper,[  --with-jasper[=ARG]     Include JPEG-2000 support via JasPer library (ARG=path)],,)
-
-if test "$with_jasper" = "no" ; then
-
-  HAVE_JASPER=no
-
-  AC_MSG_NOTICE([JasPer (JPEG2000) support disabled.])
-
-elif test "$with_jasper" = "yes" -o "$with_jasper" = "" ; then
-
-  AC_CHECK_LIB(jasper,jpc_decode,HAVE_JASPER=yes,HAVE_JASPER=no,)
-  AC_CHECK_LIB(jasper,jp2_decode,HAVE_JASPER=yes,HAVE_JASPER=no,)
-  AC_CHECK_LIB(jasper,pgx_decode,HAVE_JASPER=yes,HAVE_JASPER=no,)
-
-  if test "$HAVE_JASPER" = "yes" ; then
-    LIBS="-ljasper $LIBS"
-  fi
-else
-
-  HAVE_JASPER=yes
-  LIBS="-L$with_jasper -L$with_jasper/lib -ljasper $LIBS"
-  EXTRA_INCLUDES="-I$with_jasper -I$with_jasper/include $EXTRA_INCLUDES"
-
-  AC_MSG_NOTICE([using JasPer library from $with_jasper.])
-fi
-
-if test "$HAVE_JASPER" != "no" ; then
-  OPT_GDAL_FORMATS="jpeg2000 $OPT_GDAL_FORMATS"
-
-  dnl Test whether we have UUID JasPer hack
-
-  AC_CHECK_LIB(jasper,jp2_encode_uuid,HAVE_JASPER_UUID=yes,HAVE_JASPER_UUID=no,)
-
-  if test "$HAVE_JASPER_UUID" = "yes" ; then
-    AC_MSG_NOTICE([hacked JasPer version found (JasPer UUID), GeoJP2 enabled.])
-    JASPER_FLAGS=-DHAVE_JASPER_UUID
-  else
-    AC_MSG_NOTICE([hacked JasPer version not found, GeoJP2 disabled.])
-  fi
-fi
-
-AC_SUBST([HAVE_JASPER],$HAVE_JASPER)
-AC_SUBST([JASPER_FLAGS],$JASPER_FLAGS)
-
-
 dnl ---------------------------------------------------------------------------
 dnl Select a OpenJPEG Library to use, or disable driver.
 dnl ---------------------------------------------------------------------------
@@ -3614,7 +3269,7 @@ For JPEG2000 support using Kakadu you need provide the path to the Kakadu
 build directory.  Note that Kakadu is *not* free software.])
 else
   KAKDIR=$with_kakadu
-  OPT_GDAL_FORMATS="jp2kak jpipkak $OPT_GDAL_FORMATS"
+  OPT_GDAL_FORMATS="jp2kak $OPT_GDAL_FORMATS"
   LIBS="$LIBS -L$with_kakadu/lib -lkdu"
   AC_MSG_RESULT([requested.])
   HAVE_KAKADU=yes
@@ -3757,93 +3412,6 @@ if test "$HAVE_MRSID" != "no" ; then
 fi
 
 dnl ---------------------------------------------------------------------------
-dnl Select MrSID/MG4 Lidar library or disable driver.
-dnl ---------------------------------------------------------------------------
-
-MRSID_LIDAR_FLAGS=
-HAVE_MRSID_LIDAR=no
-
-AC_ARG_WITH(mrsid_lidar,[  --with-mrsid_lidar[=ARG]      Include MrSID/MG4 LiDAR support (ARG=path to LizardTech LiDAR SDK or no)],,)
-
-if test "x$with_mrsid_lidar" = "xno"  -o "x$with_mrsid_lidar" = "x" ; then
-  HAVE_MRSID_LIDAR=no
-  AC_MSG_NOTICE([MrSID/MG4 Lidar support disabled.])
-else
-  MRSID_LIDAR_BASE="$with_mrsid_lidar"
-
-  if test -r "$MRSID_LIDAR_BASE/include/lidar/Version.h" ; then
-    AC_MSG_RESULT([found LizardTech LiDAR SDK 1.1 or newer.])
-    HAVE_MRSID_LIDAR=yes
-  else
-    HAVE_MRSID_LIDAR=no
-    AC_MSG_RESULT([not found.])
-    AC_MSG_ERROR([  MrSID/MG4 Lidar requested, but components not found.])
-  fi
-
-  if test $HAVE_MRSID_LIDAR = yes ; then
-    if test -e "$MRSID_LIDAR_BASE/lib/liblti_lidar_dsdk.so" \
-         -o -e "$MRSID_LIDAR_BASE/lib/liblti_lidar_dsdk.dylib"; then
-      MRSID_LIDAR_LIBS="-L$MRSID_LIDAR_BASE/lib -llti_lidar_dsdk"
-      MRSID_LIDAR_INCLUDE="-I$MRSID_LIDAR_BASE/include"
-    else
-      MRSID_LIDAR_LIBS="-L$MRSID_LIDAR_BASE/lib/Release -llti_lidar_dsdk"
-      MRSID_LIDAR_INCLUDE="-I$MRSID_LIDAR_BASE/include"
-    fi
-  fi
-fi
-
-AC_SUBST(MRSID_LIDAR_INCLUDE,$MRSID_LIDAR_INCLUDE)
-AC_SUBST(MRSID_LIDAR_LIBS,$MRSID_LIDAR_LIBS)
-
-if test "$HAVE_MRSID_LIDAR" != "no" ; then
-  OPT_GDAL_FORMATS="mrsid_lidar $OPT_GDAL_FORMATS"
-fi
-
-dnl ---------------------------------------------------------------------------
-dnl Check if LuraTech library is available.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(jp2lura,[  --with-j2lura[=ARG]    Include JP2Lua support (ARG=no, lura SDK install path)],,)
-
-AC_MSG_CHECKING([for JP2Lura support])
-
-HAVE_JP2LURA=no
-JP2LURA_INCLUDE=
-
-if test "$with_jp2lura" != "" -a "$with_jp2lura" != "no" ; then
-  AC_MSG_CHECKING([for lwf_jp2.h])
-  if test -f "$with_jp2lura/include/lwf_jp2.h"; then
-    AC_MSG_RESULT([yes])
-  else
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([JP2Lura support requested but header not found])
-  fi
-  JP2LURA_INCLUDE="-I$with_jp2lura/include"
-
-  # mingw support
-  if test -f "$with_jp2lura/library/lwf_jp2.lib"; then
-      ln -s "$with_jp2lura/library/lwf_jp2.lib" "$with_jp2lura/library/lib_lwf_jp2.a"
-  fi
-
-  ORIG_LIBS="$LIBS"
-  LIBS="-L$with_jp2lura/library"
-
-  AC_CHECK_LIB(_lwf_jp2,JP2_Decompress_SetLicense,HAVE_JP2LURA="yes",,-lm)
-
-  if test "$HAVE_JP2LURA" = "no" ; then
-    AC_MSG_ERROR([JP2Lura support requested but library not found])
-  fi
-
-  LIBS="-L$with_jp2lura/library -l_lwf_jp2 -lm $ORIG_LIBS"
-fi
-
-AC_SUBST([JP2LURA_INCLUDE], [$JP2LURA_INCLUDE])
-
-if test "$HAVE_JP2LURA" != "no" ; then
-  OPT_GDAL_FORMATS="jp2lura $OPT_GDAL_FORMATS"
-fi
-
-dnl ---------------------------------------------------------------------------
 dnl Enable MSG format if EUMETSAT Wavelet Transform Software
 dnl available in the local tree
 dnl ---------------------------------------------------------------------------
@@ -3970,35 +3538,6 @@ fi
 AC_SUBST(HAVE_MYSQL,$HAVE_MYSQL)
 AC_SUBST(MYSQL_INC,$MYSQL_INC)
 AC_SUBST(MYSQL_LIB,$MYSQL_LIB)
-
-dnl ---------------------------------------------------------------------------
-dnl INGRES support.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(ingres,[  --with-ingres=ARG     Include Ingres (ARG=$II_SYSTEM)],,)
-
-AC_MSG_CHECKING([for Ingres])
-
-if test "$with_ingres" = "no" -o "x$with_ingres" = "x" ; then
-  HAVE_INGRES=no
-  II_SYSTEM=
-  INGRES_LIB=
-  INGRES_INC=
-  AC_MSG_RESULT([no])
-elif test "$with_ingres" = "yes" ; then
-  AC_MSG_ERROR([--with-ingres requires a path argument ($II_SYSTEM)])
-else
-  HAVE_INGRES=yes
-  II_SYSTEM=$with_ingres
-  INGRES_LIB="-L$II_SYSTEM/ingres/lib \
-	-liiapi.1 -lcompat.1 -lq.1 -lframe.1"
-  INGRES_INC=-I$II_SYSTEM/ingres/files
-fi
-
-AC_SUBST(HAVE_INGRES,$HAVE_INGRES)
-AC_SUBST(II_SYSTEM,$II_SYSTEM)
-AC_SUBST(INGRES_LIB,$INGRES_LIB)
-AC_SUBST(INGRES_INC,$INGRES_INC)
 
 dnl ---------------------------------------------------------------------------
 dnl Check for Xerces C++ Parser support.
@@ -4150,109 +3689,6 @@ fi
 
 AC_SUBST([HAVE_OCI], [$HAVE_ORACLE_OCI])
 AC_SUBST([OCI_INCLUDE], $[OCI_INCLUDE])
-
-dnl ---------------------------------------------------------------------------
-dnl Check for DODS.
-dnl ---------------------------------------------------------------------------
-
-HAVE_DODS=no
-
-AC_MSG_CHECKING(for DODS)
-AC_ARG_WITH(dods_root,
-    [  --with-dods-root[=ARG]  Include DODS support (ARG=no or absolute path)],
-    ,,)
-
-if test -z "$with_dods_root" -o "$with_dods_root" = "no"; then
-    AC_MSG_RESULT(disabled)
-elif test "$with_dods_root" = "yes" ; then
-    AC_MSG_ERROR([--with-dods-root requires path to dods root as argument])
-else
-    DODS_LIB=$with_dods_root/lib
-    DODS_INC="-I$with_dods_root/include -I$with_dods_root/include/libdap -I$with_dods_root/include/dap"
-    DODS_BIN=$with_dods_root/bin
-
-    dnl Check libdap version the sane way (if possible through dap-config)
-    if test -x $DODS_BIN/dap-config ; then
-        LIBDAP_VER=`${DODS_BIN}/dap-config --version |awk '{print \$2}'`
-        LIBDAP_CFLAGS=`${DODS_BIN}/dap-config --cflags`
-        dnl The dods driver needs LIBDAP_320 and LIBDAP_39 defined to include the right headers
-        DODS_INC="$DODS_INC $LIBDAP_CFLAGS -DLIBDAP_310 -DLIBDAP_39"
-        dnl libs from dap-config gets added further down
-        AC_MSG_RESULT([libdap $LIBDAP_VER])
-    else
-        dnl Check the version by compiling test programs
-
-        dnl Test if we have libdap >= 3.10
-        dnl From libdap 3.10, AISConnect.h has been renamed as Connect.h
-        rm -f islibdappost310.*
-        echo '#include "Connect.h"' > islibdappost310.cpp
-        echo 'int main(int argc, char** argv) { return 0; } ' >> islibdappost310.cpp
-        if test -z "`${CXX} ${CXXFLAGS} ${CPPFLAGS} islibdappost310.cpp -c ${DODS_INC} ${CPPFLAGS} 2>&1`" ; then
-        dnl yes, libdap >= 3.10
-            DODS_INC="$DODS_INC -DLIBDAP_310 -DLIBDAP_39"
-            AC_MSG_RESULT([libdap >= 3.10])
-        else
-            AC_MSG_RESULT([libdap < 3.10])
-
-            dnl Test if we have libdap < 3.9
-            dnl Before libdap < 3.9, DAS derived from AttrTable class
-            dnl I wish they had defines with version numbers instead of this test !
-            rm -f islibdappre39.*
-            echo '#include "DAS.h"' > islibdappre39.cpp
-            echo '#include "AttrTable.h"' >> islibdappre39.cpp
-            echo 'using namespace libdap;' >> islibdappre39.cpp
-            echo 'int main(int argc, char** argv) { DAS oDAS; AttrTable& oAttrTable = oDAS; } ' >> islibdappre39.cpp
-            if test -z "`${CXX} ${CXXFLAGS} ${CPPFLAGS} islibdappre39.cpp -c ${DODS_INC} 2>&1`" ; then
-            dnl yes, libdap < 3.9
-                AC_MSG_RESULT([libdap < 3.9])
-            else
-                DODS_INC="$DODS_INC -DLIBDAP_39"
-                AC_MSG_RESULT([libdap >= 3.9])
-            fi
-            rm -f islibdappre39.*
-
-        fi
-        rm -f islibdappost310.*
-    fi
-
-
-    dnl Add the DODS libraries to LIBS
-    if test -x $DODS_BIN/opendap-config ; then
-      dnl OPeNDAP 3.4 and earlier lack opendap-config, but use it if avail.
-      LIBS="$LIBS `$DODS_BIN/opendap-config --libs`"
-    elif test -x $DODS_BIN/dap-config ; then
-      dnl OPeNDAP 3.4 and earlier lack opendap-config, but use it if avail.
-      LIBS="$LIBS `$DODS_BIN/dap-config --libs`"
-    else
-      dnl Otherwise try to put things together in a more primitive way.
-      LIBS="$LIBS -L$DODS_LIB -ldap++ -lpthread -lrx"
-
-      dnl Add curl to LIBS; it might be local to DODS or generally installed
-      if test -x $DODS_BIN/curl-config; then
-          LIBS="$LIBS  `$DODS_BIN/curl-config --libs`"
-      elif which curl-config > /dev/null 2>&1; then
-          LIBS="$LIBS  `curl-config --libs`"
-      else
-          AC_MSG_ERROR([You gave a dods root, but I can't find curl!])
-      fi
-
-      if test -x $DODS_BIN/xml2-config; then
-          LIBS="$LIBS `$DODS_BIN/xml2-config --libs`"
-      elif which xml2-config > /dev/null 2>&1; then
-          LIBS="$LIBS  `xml2-config --libs`"
-      else
-          AC_MSG_ERROR([You gave a dods root, but I can't find xml2!])
-      fi
-    fi
-
-    OPT_GDAL_FORMATS="dods $OPT_GDAL_FORMATS"
-    DODSDEF=-DFRMT_dods
-    AC_MSG_RESULT(setting DODS root directory to $with_dods_root)
-    HAVE_DODS=yes
-fi
-
-dnl This is used by the GNUmakefile in frmts/dods (via GDALmake.opt)
-AC_SUBST(DODS_INC)
 
 dnl ---------------------------------------------------------------------------
 dnl Check for libxml2.
@@ -4476,41 +3912,6 @@ fi
 AC_SUBST(HAVE_IDB,${HAVE_IDB})
 AC_SUBST(IDB_INC,${IDB_INC})
 AC_SUBST(IDB_LIB,${IDB_LIB})
-
-dnl ---------------------------------------------------------------------------
-dnl Check if epsilon library is available.
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(epsilon,[  --with-epsilon[=ARG]    Include EPSILON support (ARG=no, yes or libepsilon install root path)],,)
-
-EPSILON_SETTING=no
-
-if test "$with_epsilon" = "yes" ; then
-
-  AC_CHECK_LIB(epsilon,eps_read_block_header,EPSILON_SETTING=yes,EPSILON_SETTING=no,)
-
-  if test "$EPSILON_SETTING" = "yes" ; then
-    LIBS="-lepsilon $LIBS"
-  else
-    echo "libepsilon not found - EPSILON support disabled"
-  fi
-
-elif test "$with_epsilon" != "no" -a "$with_epsilon" != ""; then
-
-  AC_CHECK_LIB(epsilon,eps_read_block_header,EPSILON_SETTING=yes,EPSILON_SETTING=no,-L$with_epsilon/lib -lepsilon)
-
-  if test "$EPSILON_SETTING" = "yes" ; then
-    LIBS="-L$with_epsilon/lib -lepsilon $LIBS"
-    EXTRA_INCLUDES="-I$with_epsilon/include $EXTRA_INCLUDES"
-  else
-    echo "libepsilon not found - EPSILON support disabled"
-  fi
-
-fi
-
-if test "$EPSILON_SETTING" != "no" ; then
-  OPT_GDAL_FORMATS="epsilon $OPT_GDAL_FORMATS"
-fi
 
 dnl ---------------------------------------------------------------------------
 dnl Check if webp library is available.
@@ -5566,91 +4967,6 @@ fi
 AC_SUBST(MDB_ENABLED,$MDB_ENABLED)
 AC_SUBST(JVM_LIB,$JVM_LIB)
 
-
-dnl ---------------------------------------------------------------------------
-dnl Select Rasdaman or disable driver.
-dnl ---------------------------------------------------------------------------
-
-RASDAMAN_ENABLED=no
-
-AC_CHECKING(whether we should include rasdaman support)
-AC_ARG_WITH(rasdaman,
-[  --with-rasdaman[=DIR]        Include rasdaman support (DIR is rasdaman's install dir).],,)
-
-if test "$with_rasdaman" = "yes" ; then
-
-  AC_CHECK_LIB(raslib,main,RASDAMAN_ENABLED=yes,,,)
-
-  if test -n "$RASDAMAN_ENABLED" ; then
-      RASDAMAN_LIB="-lrasodmg -lclientcomm -lcompression -lnetwork -lraslib"
-      OPT_GDAL_FORMATS="rasdaman $OPT_GDAL_FORMATS"
-      AC_MSG_RESULT([        using rasdaman from system libs.])
-  else
-      AC_MSG_WARN([        rasdaman not found in system libs... use --with-rasdaman=DIR.])
-  fi
-
-elif test -n "$with_rasdaman" -a "$with_rasdaman" != "no" ; then
-
-  RASDAMAN_DIR=$with_rasdaman
-
-  if test -f $RASDAMAN_DIR/include/rasdaman.hh -a -d$RASDAMAN_DIR/lib ; then
-      RASDAMAN_INC=-I$RASDAMAN_DIR/include
-      RASDAMAN_LIB="-L$RASDAMAN_DIR/lib -lrasodmg -lclientcomm -lcompression -lnetwork -lraslib"
-  else
-      AC_MSG_ERROR("Could not find rasdaman.hh or libraslib.a in $RASDAMAN_DIR.")
-  fi
-
-  RASDAMAN_ENABLED=yes
-  OPT_GDAL_FORMATS="rasdaman $OPT_GDAL_FORMATS"
-  AC_MSG_RESULT([        using rasdaman from $RASDAMAN_DIR.])
-
-else
-
-  AC_MSG_RESULT([        rasdaman support not requested.])
-fi
-
-AC_SUBST(RASDAMAN_ENABLED,$RASDAMAN_ENABLED)
-AC_SUBST(RASDAMAN_INC,    $RASDAMAN_INC)
-AC_SUBST(RASDAMAN_LIB,    $RASDAMAN_LIB)
-
-dnl ---------------------------------------------------------------------------
-dnl RDB support
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(rdb,[  --with-rdb[=ARG]    Include RDB support (ARG=no, yes or RDB SDK root path)],,)
-
-RDB_SETTING=no
-
-if test "$with_rdb" = "yes" -o "$with_rdb" = "" ; then
-
-  AC_CHECK_LIB(rdb,rdb_library_name,RDB_SETTING=yes,RDB_SETTING=no,)
-
-  if test "$RDB_SETTING" = "yes" ; then
-    LIBS="-lrdb $LIBS"
-  else
-    echo "librdb not found - RDB support disabled"
-  fi
-
-elif test "$with_rdb" != "no" -a "$with_rdb" != ""; then
-
-  AC_CHECK_LIB(rdb,rdb_library_name,RDB_SETTING=yes,RDB_SETTING=no,-L$with_rdb/library -lrdb)
-
-  if test "$RDB_SETTING" = "yes" ; then
-    LIBS="-L$with_rdb/library -lrdb $LIBS"
-    EXTRA_INCLUDES="-I$with_rdb/interface/cpp/ -I$with_rdb/interface/c/ $EXTRA_INCLUDES"
-  else
-    echo "librdb not found - RDB support disabled"
-  fi
-
-fi
-
-AC_SUBST(RDB_SETTING,$RDB_SETTING)
-
-if test "$RDB_SETTING" != "no" ; then
-  OPT_GDAL_FORMATS="rdb $OPT_GDAL_FORMATS"
-fi
-
-
 dnl ---------------------------------------------------------------------------
 dnl Armadillo support
 dnl ---------------------------------------------------------------------------
@@ -5876,59 +5192,6 @@ AC_SUBST(HAVE_LERC,$HAVE_LERC)
 
 
 dnl ---------------------------------------------------------------------------
-dnl Whether to include NULL driver in the build
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH([null],
-	    AS_HELP_STRING([--with-null],
-	       [Enable NULL driver (only useful for development purposes]),,)
-
-AC_MSG_CHECKING([for NULL])
-if test "$with_null" = "yes" ; then
-    OPT_GDAL_FORMATS="null $OPT_GDAL_FORMATS"
-    AC_MSG_RESULT([enabled])
-else
-    AC_MSG_RESULT([disabled])
-fi
-
-dnl ---------------------------------------------------------------------------
-dnl Detect OpenEXR
-dnl ---------------------------------------------------------------------------
-
-AC_ARG_WITH(exr,[  --with-exr            Include EXR support via OpenEXR library],,)
-
-HAVE_EXR=no
-EXR_CFLAGS=""
-
-if test "$with_exr" = "no" ; then
-
-  AC_MSG_NOTICE([EXR support disabled.])
-
-else
-
-  PKG_PROG_PKG_CONFIG([0.21])
-  PKG_CHECK_MODULES([EXR], [OpenEXR >= 2.2], [HAVE_EXR=yes], [HAVE_EXR=no])
-
-  if test -n "$EXR_CFLAGS"; then
-
-    # Test that the package found is for the right architecture
-    saved_LIBS="$LIBS"
-    LIBS="$EXR_LIBS"
-    AC_CHECK_LIB(IlmImf,ImfTiledInputReadTile, [HAVE_EXR=yes], [HAVE_EXR=no])
-    LIBS="$saved_LIBS"
-
-    if test "$HAVE_EXR" = "yes"; then
-        OPT_GDAL_FORMATS="exr $OPT_GDAL_FORMATS"
-        LIBS="$EXR_LIBS $LIBS"
-    else
-        EXR_CFLAGS=""
-    fi
-  fi
-fi
-
-AC_SUBST(EXR_CFLAGS,$EXR_CFLAGS)
-
-dnl ---------------------------------------------------------------------------
 dnl Detect libheif
 dnl ---------------------------------------------------------------------------
 
@@ -6037,17 +5300,12 @@ LOC_MSG([  cryptopp support:          ${HAVE_CRYPTOPP}])
 LOC_MSG([  crypto/openssl support:    ${HAVE_OPENSSL_CRYPTO}])
 LOC_MSG([  GRASS support:             ${GRASS_SETTING}])
 LOC_MSG([  CFITSIO support:           ${FITS_SETTING}])
-LOC_MSG([  PCRaster support:          ${PCRASTER_SETTING}])
 LOC_MSG([  LIBPNG support:            ${PNG_SETTING}])
-LOC_MSG([  DDS support:               ${DDS_SETTING}])
-LOC_MSG([  GTA support:               ${GTA_SETTING}])
 LOC_MSG([  LIBTIFF support:           ${TIFF_SETTING} (BigTIFF=${HAVE_BIGTIFF})])
 LOC_MSG([  LIBGEOTIFF support:        ${GEOTIFF_SETTING}])
 LOC_MSG([  LIBJPEG support:           ${JPEG_SETTING}])
 LOC_MSG([  12 bit JPEG:               ${JPEG12_ENABLED}])
 LOC_MSG([  12 bit JPEG-in-TIFF:       ${TIFF_JPEG12_ENABLED}])
-LOC_MSG([  LIBGIF support:            ${GIF_SETTING}])
-LOC_MSG([  JPEG-Lossless/CharLS:      ${HAVE_CHARLS}])
 LOC_MSG([  OGDI support:              ${HAVE_OGDI}])
 LOC_MSG([  HDF4 support:              ${HAVE_HDF4}])
 LOC_MSG([  HDF5 support:              ${HAVE_HDF5}])
@@ -6057,24 +5315,15 @@ if test "$NETCDF_SETTING" = "yes" ; then
   LOC_MSG([  NetCDF has netcdf_mem.h:   ${NETCDF_MEM}])
 fi
 LOC_MSG([  Kakadu support:            ${HAVE_KAKADU}])
-if test "x$HAVE_JASPER_UUID" != "x" ; then
-  LOC_MSG([  JasPer support:            ${HAVE_JASPER} (GeoJP2=${HAVE_JASPER_UUID})])
-else
-  LOC_MSG([  JasPer support:            ${HAVE_JASPER}])
-fi
 LOC_MSG([  OpenJPEG support:          ${HAVE_OPENJPEG}])
 LOC_MSG([  ECW support:               ${ECW_SETTING}])
 LOC_MSG([  MrSID support:             ${HAVE_MRSID}])
-LOC_MSG([  MrSID/MG4 Lidar support:   ${HAVE_MRSID_LIDAR}])
-LOC_MSG([  JP2Lura support:           ${HAVE_JP2LURA}])
 LOC_MSG([  MSG support:               ${HAVE_MSG}])
-LOC_MSG([  EPSILON support:           ${EPSILON_SETTING}])
 LOC_MSG([  WebP support:              ${WEBP_SETTING}])
 LOC_MSG([  cURL support (wms/wcs/...):${CURL_SETTING}])
 LOC_MSG([  PostgreSQL support:        ${HAVE_PG}])
 LOC_MSG([  LERC support:              ${HAVE_LERC}])
 LOC_MSG([  MySQL support:             ${HAVE_MYSQL}])
-LOC_MSG([  Ingres support:            ${HAVE_INGRES}])
 LOC_MSG([  Xerces-C support:          ${HAVE_XERCES}])
 LOC_MSG([  Expat support:             ${HAVE_EXPAT}])
 LOC_MSG([  libxml2 support:           ${HAVE_LIBXML2}])
@@ -6085,9 +5334,6 @@ LOC_MSG([  MDB support:               ${MDB_ENABLED}])
 LOC_MSG([  PCIDSK support:            ${PCIDSK_SETTING}])
 LOC_MSG([  OCI support:               ${HAVE_OCI}])
 LOC_MSG([  GEORASTER support:         ${HAVE_GEORASTER}])
-LOC_MSG([  Rasdaman support:          ${RASDAMAN_ENABLED}])
-LOC_MSG([  RDB support:               ${RDB_SETTING}])
-LOC_MSG([  DODS support:              ${HAVE_DODS}])
 LOC_MSG([  SQLite support:            ${HAVE_SQLITE}])
 LOC_MSG([  PCRE support:              ${HAVE_PCRE}])
 LOC_MSG([  SpatiaLite support:        ${HAVE_SPATIALITE}])
@@ -6096,7 +5342,6 @@ LOC_MSG([  SpatiaLite shared obj name:${SPATIALITE_SONAME}])
 fi
 LOC_MSG([  RasterLite2 support:       ${HAVE_RASTERLITE2}])
 LOC_MSG([  Teigha (DWG and DGNv8):    ${HAVE_TEIGHA}])
-LOC_MSG([  INFORMIX DataBlade support:${HAVE_IDB}])
 LOC_MSG([  GEOS support:              ${HAVE_GEOS_RESULT}])
 LOC_MSG([  SFCGAL support:            ${HAVE_SFCGAL_RESULT}])
 LOC_MSG([  QHull support:             ${QHULL_SETTING}])
@@ -6107,11 +5352,9 @@ LOC_MSG([  OpenCL support:            ${OPENCL_SETTING}])
 LOC_MSG([  Armadillo support:         ${HAVE_ARMADILLO}])
 LOC_MSG([  FreeXL support:            ${HAVE_FREEXL}])
 LOC_MSG([  SOSI support:              ${SOSI_ENABLED}])
-LOC_MSG([  MongoDB support:           ${MONGODB_ENABLED}])
 LOC_MSG([  MongoCXX v3 support:       ${MONGOCXXV3_ENABLED}])
 LOC_MSG([  HDFS support:              ${HDFS_ENABLED}])
 LOC_MSG([  TileDB support:            ${TILEDB_SETTING}])
-LOC_MSG([  EXR support:               ${HAVE_EXR}])
 LOC_MSG([  HEIF support:              ${HAVE_HEIF}])
 LOC_MSG([  userfaultfd support:       ${ENABLE_UFFD}])
 LOC_MSG([  misc. gdal formats:       ${GDALFORMATS_ENABLED}])

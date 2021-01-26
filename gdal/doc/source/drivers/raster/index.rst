@@ -20,21 +20,12 @@ Raster drivers
 .. toctree::
    :maxdepth: 1
 
-   aaigrid
-   ace2
-   adrg
-   aig
    airsar
-   arg
    bag
    blx
    bmp
-   bpg
    bsb
-   bt
-   byn
    cad
-   cals
    ceos
    coasp
    cog
